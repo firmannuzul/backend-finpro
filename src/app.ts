@@ -9,6 +9,9 @@ import { ValidationMiddleware } from "./middlewares/validation.middleware.js";
 import { SampleController } from "./modules/sample/sample.controller.js";
 import { SampleRouter } from "./modules/sample/sample.router.js";
 import { SampleService } from "./modules/sample/sample.service.js";
+import { AuthService } from "./modules/auth/auth.service.js";
+import { AuthController } from "./modules/auth/auth.controller.js";
+import { AuthRouter } from "./modules/auth/auth.router.js";
 
 export class App {
   app: Express;
@@ -32,9 +35,11 @@ export class App {
 
     // services
     const sampleService = new SampleService(prismaClient);
+    const authService = new AuthService(prismaClient);
 
     // controllers
     const sampleController = new SampleController(sampleService);
+    const authController = new AuthController(authService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -45,7 +50,10 @@ export class App {
       validationMiddleware,
     );
 
+    const authRouter = new AuthRouter(authController, validationMiddleware);
+
     this.app.use("/samples", sampleRouter.getRouter());
+    this.app.use("/auth", authRouter.getRouter());
   }
 
   private handleError() {

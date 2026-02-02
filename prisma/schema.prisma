@@ -203,3 +203,13 @@ model SavedJob {
 
   @@map("saved_jobs")
 }
+
+model Sample {
+  id        Int       @id @default(autoincrement())
+  name      String
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("samples")
+}
