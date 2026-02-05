@@ -12,6 +12,10 @@ import { SampleService } from "./modules/sample/sample.service.js";
 import { AuthService } from "./modules/auth/auth.service.js";
 import { AuthController } from "./modules/auth/auth.controller.js";
 import { AuthRouter } from "./modules/auth/auth.router.js";
+import { JobService } from "./modules/job/job.service.js";
+import { JobController } from "./modules/job/job.controller.js";
+import { CloudinaryService } from "./modules/cloudinary/cloudinary.service.js";
+import { JobRouter } from "./modules/job/job.router.js";
 
 export class App {
   app: Express;
@@ -32,14 +36,17 @@ export class App {
   private registerModules() {
     // shared dependency
     const prismaClient = prisma;
+    const cloudinaryService = new CloudinaryService();
 
     // services
     const sampleService = new SampleService(prismaClient);
     const authService = new AuthService(prismaClient);
+    const jobService = new JobService(prismaClient, cloudinaryService);
 
     // controllers
     const sampleController = new SampleController(sampleService);
     const authController = new AuthController(authService);
+    const jobController = new JobController(jobService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -52,8 +59,11 @@ export class App {
 
     const authRouter = new AuthRouter(authController, validationMiddleware);
 
+    const jobRouter = new JobRouter(jobController, validationMiddleware);
+
     this.app.use("/samples", sampleRouter.getRouter());
     this.app.use("/auth", authRouter.getRouter());
+    this.app.use("/job", jobRouter.getRouter());
   }
 
   private handleError() {
