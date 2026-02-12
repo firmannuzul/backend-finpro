@@ -114,18 +114,19 @@ model JobPosting {
   // FK tetap companyId
   companyId Int @map("company_id")
 
-  title           String
-  slug            String   @default("")
-  category        String
-  location        String
-  salaryMin       Decimal  @map("salary_min") @db.Decimal(15, 2)
-  salaryMax       Decimal  @map("salary_max") @db.Decimal(15, 2)
-  description     String   @db.Text
-  thumbnail       String   @default("")
-  hasPreselection Boolean  @default(false) @map("has_preselection_test")
-  isPublished     Boolean  @default(true) @map("is_published")
-  postedAt        DateTime @default(now()) @map("posted_at")
-  deadlineAt      DateTime @map("deadline_at")
+  title             String
+  slug              String   @default("")
+  category          String
+  location          String
+  salaryMin         Decimal  @map("salary_min") @db.Decimal(15, 2)
+  salaryMax         Decimal  @map("salary_max") @db.Decimal(15, 2)
+  description       String   @db.Text
+  thumbnail         String   @default("")
+  hasPreselection   Boolean  @default(false) @map("has_preselection_test")
+  testPassingGrade  Int      @default(70) @map("test_passing_grade")
+  isPublished       Boolean  @default(true) @map("is_published")
+  postedAt          DateTime @default(now()) @map("posted_at")
+  deadlineAt        DateTime @map("deadline_at")
 
   // Relations
   company      CompanyProfile         @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -143,13 +144,26 @@ model PreselectionQuestion {
   jobPostingId Int @map("job_posting_id")
 
   questionText  String @map("question_text") @db.Text
-  options       Json
-  correctAnswer String @map("correct_answer") @db.Char(1)
+  options      QuestionOption[] 
 
   // Relations
   jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
   @@map("preselection_questions")
+}
+
+model QuestionOption { //Ditambahakan model ini untuk opsi jawaban
+  id Int @id @default(autoincrement()) @map("option_id")
+  
+  questionId Int @map("question_id")
+  
+  optionText String  @map("option_text")
+  isCorrect  Boolean @default(false) @map("is_correct") // Kunci Jawaban (True/False)
+
+  // Relations
+  question PreselectionQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("question_options")
 }
 
 model Application {
@@ -202,103 +216,6 @@ model SavedJob {
   // Relations
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
-
-  @@map("saved_jobs")
-}
-
-model JobPosting {
-  // Primary Key diubah jadi "id"
-  id                Int       @id @default(autoincrement()) @map("job_posting_id")
-  
-  // FK tetap companyId
-  companyId         Int       @map("company_id") 
-  
-  title             String
-  category          String
-  location          String
-  salaryMin         Decimal   @map("salary_min") @db.Decimal(15, 2)
-  salaryMax         Decimal   @map("salary_max") @db.Decimal(15, 2)
-  description       String    @db.Text
-  hasPreselection   Boolean   @default(false) @map("has_preselection_test")
-  isPublished       Boolean   @default(true) @map("is_published")
-  postedAt          DateTime  @default(now()) @map("posted_at")
-  deadlineAt        DateTime  @map("deadline_at")
-
-  // Relations
-  company           CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  applications      Application[]
-  questions         PreselectionQuestion[]
-  savedByUsers      SavedJob[]
-
-  @@map("job_postings")
-}
-
-model PreselectionQuestion {
-  // Primary Key diubah jadi "id"
-  id            Int         @id @default(autoincrement()) @map("question_id")
-  
-  jobPostingId  Int         @map("job_posting_id")
-  
-  questionText  String      @map("question_text") @db.Text
-  options       Json        
-  correctAnswer String      @map("correct_answer") @db.Char(1)
-
-  // Relations
-  jobPosting    JobPosting  @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
-
-  @@map("preselection_questions")
-}
-
-model Application {
-  // Primary Key diubah jadi "id"
-  id                Int       @id @default(autoincrement()) @map("applications_id")
-  
-  userId            Int       @map("user_id") 
-  jobPostingId      Int       @map("job_posting_id")
-  
-  cvFilePath        String    @map("cv_file_path")
-  expectedSalary    Decimal   @map("expected_salary") @db.Decimal(15, 2)
-  preselectionScore Int?      @map("preselection_score")
-  status            ApplicationStatus @default(PENDING)
-  rejectionReason   String?   @map("rejection_reason") @db.Text
-  appliedAt         DateTime  @default(now()) @map("applied_at")
-
-  // Relations
-  applicant         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobPosting        JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
-  interviews        Interview[]
-
-  @@map("applications")
-}
-
-model Interview {
-  // Primary Key diubah jadi "id"
-  id            Int       @id @default(autoincrement()) @map("interview_id")
-  
-  applicationId Int       @map("application_id")
-  
-  scheduledAt   DateTime  @map("scheduled_at")
-  locationLink  String    @map("location_link") 
-  notes         String?   @db.Text
-  isReminded    Boolean   @default(false) @map("is_reminded")
-
-  // Relations
-  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-
-  @@map("interviews")
-}
-
-model SavedJob {
-  // Primary Key sudah "id" (tidak perlu diubah)
-  id            Int       @id @default(autoincrement())
-  
-  userId        Int       @map("user_id")
-  jobPostingId  Int       @map("job_posting_id")
-  createdAt     DateTime  @default(now()) @map("created_at")
-
-  // Relations
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobPosting    JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
   @@map("saved_jobs")
 }
