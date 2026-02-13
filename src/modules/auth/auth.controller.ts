@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { AuthService } from "./auth.service.js";
 
 export class AuthController {
@@ -11,6 +11,26 @@ export class AuthController {
 
   login = async (req: Request, res: Response) => {
     const result = await this.authService.login(req.body);
+    res.status(200).send(result);
+  };
+
+  google = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.authService.googleService(req.body.accessToken);
+      res.status(200).send(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  forgotPassword = async (req: Request, res: Response) => {
+    const result = await this.authService.forgotPassword(req.body);
+    res.status(200).send(result);
+  };
+
+  resetPassword = async (req: Request, res: Response) => {
+    const authUserId = Number(res.locals.user.id);
+    const result = await this.authService.resetPassword(req.body, authUserId);
     res.status(200).send(result);
   };
 }

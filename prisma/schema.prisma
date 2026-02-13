@@ -19,8 +19,7 @@ enum Role {
 
 enum AuthProvider {
   GOOGLE
-  FACEBOOK
-  TWITTER
+  CREDENTIALS
 }
 
 enum Gender {
