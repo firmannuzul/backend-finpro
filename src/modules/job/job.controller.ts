@@ -12,12 +12,12 @@ export class JobController {
     const thumbnail = files.thumbnail?.[0];
     if (!thumbnail) throw new ApiError("Thumbnail is required", 400);
 
-    const authCompanyId = Number(res.locals.user.id);
+    const authUserId = Number(res.locals.user.id);
 
     const result = await this.jobService.createJob(
       req.body,
       thumbnail,
-      authCompanyId,
+      authUserId,
     );
     res.status(200).send(result);
   };

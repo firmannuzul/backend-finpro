@@ -41,7 +41,6 @@ export class JobService {
     const whereClause: Prisma.JobPostingWhereInput = {};
 
     if (search) {
-      // whereClause.title = { contains: search, mode: "insensitive" };
       whereClause.OR = [
         {
           title: {
@@ -51,6 +50,20 @@ export class JobService {
         },
         {
           location: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          company: {
+            companyName: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          category: {
             contains: search,
             mode: "insensitive",
           },

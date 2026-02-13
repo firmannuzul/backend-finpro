@@ -1,12 +1,24 @@
 import jwt from "jsonwebtoken";
-import { PrismaClient } from "../../../generated/prisma/client.js";
+import {
+  AuthProvider,
+  PrismaClient,
+} from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { comparePassword, hashPassword } from "../../utils/password.js";
 import { LoginDTO } from "./dto/login.dto.js";
 import { RegisterDTO } from "./dto/register.dto.js";
+import { decrypt } from "../../lib/crypto.js";
+import { getUserInfoService } from "./get-user-info.service.js";
+import { prismaExclude } from "../../prisma.js";
+import { MailService } from "../mail/mail.service.js";
+import { ForgotPasswordDTO } from "./dto/forgot-password.dto.js";
+import { ResetPasswordDTO } from "./dto/reset-password.dto.js";
 
 export class AuthService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(
+    private prisma: PrismaClient,
+    private mailService: MailService = new MailService(),
+  ) {}
 
   register = async (body: RegisterDTO) => {
     const user = await this.prisma.user.findFirst({
@@ -22,6 +34,7 @@ export class AuthService {
         email: body.email,
         password: hashedPassword,
         role: body.role ?? "APPLICANT",
+        provider: AuthProvider.CREDENTIALS,
       },
     });
 
@@ -45,5 +58,93 @@ export class AuthService {
 
     const { password, ...userWithoutPassword } = user;
     return { ...userWithoutPassword, accessToken };
+  };
+
+  googleService = async (encryptedAccessToken: string) => {
+    try {
+      const accessToken = decrypt(encryptedAccessToken);
+
+      const { email } = await getUserInfoService(accessToken);
+
+      // const user = await this.prisma.user.findFirst({
+      //   where: { email },
+      //   select: prismaExclude("User", ["password"]),
+      // });
+
+      const user = await this.prisma.user.findFirst({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          provider: true,
+        },
+      });
+
+      if (!user) {
+        // return await this.prisma.user.create({
+        //   data: {
+        //     email,
+        //     provider: AuthProvider.GOOGLE,
+        //   },
+        //   select: prismaExclude("User", ["password"]),
+        // });
+
+        return await this.prisma.user.create({
+          data: {
+            email,
+            provider: AuthProvider.GOOGLE,
+          },
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            provider: true,
+          },
+        });
+      }
+
+      if (user.provider !== AuthProvider.GOOGLE) {
+        throw new Error("Please login using email");
+      }
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  forgotPassword = async (body: ForgotPasswordDTO) => {
+    const user = await this.prisma.user.findFirst({
+      where: { email: body.email },
+    });
+
+    if (!user) throw new ApiError("User not found", 404);
+
+    const payload = { id: user.id, role: user.role };
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET_RESET!, {
+      expiresIn: "15m",
+    });
+
+    await this.mailService.sendEmail(
+      body.email,
+      "Forgot Password",
+      "forgot-password",
+      {
+        resetUrl: `http://localhost:3000/reset-password/${accessToken}`,
+      },
+    );
+    return { message: "send email success" };
+  };
+
+  resetPassword = async (body: ResetPasswordDTO, authUserId: number) => {
+    const hashedPassword = await hashPassword(body.password);
+
+    await this.prisma.user.update({
+      where: { id: authUserId },
+      data: { password: hashedPassword },
+    });
+
+    return { message: "reset password success" };
   };
 }
