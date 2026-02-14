@@ -19,6 +19,9 @@ import { JobRouter } from "./modules/job/job.router.js";
 import { AssessmentService } from "./modules/assessment/assessment.service.js";
 import { AssessmentController } from "./modules/assessment/assessment.controller.js";
 import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
+import { ApplicationService } from "./modules/application/application.service.js";
+import { ApplicationController } from "./modules/application/application.controller.js";
+import { ApplicationRouter } from "./modules/application/application.router.js";
 
 export class App {
   app: Express;
@@ -46,12 +49,14 @@ export class App {
     const authService = new AuthService(prismaClient);
     const jobService = new JobService(prismaClient, cloudinaryService);
     const assessmentService = new AssessmentService(prisma);
+    const applicationService = new ApplicationService(prisma);
 
     // controllers
     const sampleController = new SampleController(sampleService);
     const authController = new AuthController(authService);
     const jobController = new JobController(jobService);
     const assessmentController = new AssessmentController(assessmentService);
+    const applicationController = new ApplicationController(applicationService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
@@ -71,10 +76,13 @@ export class App {
       validationMiddleware,
     );
 
+    const applicationRouter = new ApplicationRouter(applicationController);
+
     this.app.use("/samples", sampleRouter.getRouter());
     this.app.use("/auth", authRouter.getRouter());
     this.app.use("/job", jobRouter.getRouter());
     this.app.use("/assessment", assessmentRouter.getRouter());
+    this.app.use("/applications", applicationRouter.getRouter());
   }
 
   private handleError() {
