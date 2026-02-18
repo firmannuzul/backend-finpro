@@ -70,12 +70,12 @@ model ApplicantProfile {
   // FK tetap userId, tapi referensinya ke User.id
   userId Int @unique @map("user_id")
 
-  name          String
-  gender        Gender
-  dob           DateTime @db.Date
-  phone         String
-  address       String   @db.Text
-  lastEducation String   @map("last_education")
+  name          String?
+  gender        Gender?
+  dob           DateTime? @db.Date
+  phone         String?
+  address       String ?  @db.Text
+  lastEducation String?   @map("last_education")
   photoPath     String?  @map("photo_path")
   cvResumePath  String?  @map("cv_resume_path")
 
@@ -115,6 +115,9 @@ model JobPosting {
 
   title           String
   slug            String   @default("")
+  experience      String?
+  responsibility  String?
+  requirement     String?
   category        String
   location        String
   salaryMin       Decimal  @map("salary_min") @db.Decimal(15, 2)
@@ -151,19 +154,6 @@ model PreselectionQuestion {
   @@map("preselection_questions")
 }
 
-model QuestionOption { //Ditambahakan model ini untuk opsi jawaban
-  id Int @id @default(autoincrement()) @map("option_id")
-  
-  questionId Int @map("question_id")
-  
-  optionText String  @map("option_text")
-  isCorrect  Boolean @default(false) @map("is_correct") // Kunci Jawaban (True/False)
-
-  // Relations
-  question PreselectionQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@map("question_options")
-}
 model Application {
   // Primary Key diubah jadi "id"
   id Int @id @default(autoincrement()) @map("applications_id")
@@ -172,7 +162,12 @@ model Application {
   jobPostingId Int @map("job_posting_id")
 
   cvFilePath        String            @map("cv_file_path")
-  expectedSalary    Decimal           @map("expected_salary") @db.Decimal(15, 2)
+  fullName          String
+  email             String
+  phoneNumber       String
+  address           String
+  lastEducation     String
+  expectedSalary    Decimal?          @map("expected_salary") @db.Decimal(15, 2)
   preselectionScore Int?              @map("preselection_score")
   status            ApplicationStatus @default(PENDING)
   rejectionReason   String?           @map("rejection_reason") @db.Text
@@ -216,4 +211,14 @@ model SavedJob {
   jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
   @@map("saved_jobs")
+}
+
+model Sample {
+  id        Int       @id @default(autoincrement())
+  name      String
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("samples")
 }

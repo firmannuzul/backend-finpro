@@ -27,6 +27,7 @@ export class JobService {
         salaryMin: parseInt(body.salaryMin),
         salaryMax: parseInt(body.salaryMax),
         deadlineAt: new Date(body.deadlineAt),
+        experience: body.experience,
         slug: slug,
         thumbnail: secure_url,
       },
@@ -36,9 +37,21 @@ export class JobService {
   };
 
   getJobs = async (query: GetJobsDTO) => {
-    const { page, take, sortBy, sortOrder, search } = query;
+    const {
+      page,
+      take,
+      sortBy,
+      sortOrder,
+      search,
+      location,
+      category,
+      timeRange,
+      sort,
+    } = query;
 
     const whereClause: Prisma.JobPostingWhereInput = {};
+
+    /* 🔍 Text search */
 
     if (search) {
       whereClause.OR = [
@@ -70,6 +83,43 @@ export class JobService {
         },
       ];
     }
+
+    /* 📍 Location filter */
+    if (location) {
+      whereClause.location = location;
+    }
+
+    /* 💼 Category filter */
+    if (category) {
+      whereClause.category = category;
+    }
+
+    /* ⏱ Time range filter */
+    if (timeRange && timeRange !== "all") {
+      const now = new Date();
+      let fromDate: Date | undefined;
+
+      if (timeRange === "week") {
+        fromDate = new Date(now.setDate(now.getDate() - 7));
+      }
+
+      if (timeRange === "month") {
+        fromDate = new Date(now.setMonth(now.getMonth() - 1));
+      }
+
+      if (fromDate) {
+        whereClause.postedAt = {
+          gte: fromDate,
+        };
+      }
+    }
+
+    /* 🔃 Sorting (safe mapping) */
+    const sortMap: Record<string, any> = {
+      latest: { createdAt: "desc" },
+      oldest: { createdAt: "asc" },
+      popular: { views: "desc" }, // kalau ada field views
+    };
 
     const jobs = await this.prisma.jobPosting.findMany({
       where: whereClause,
