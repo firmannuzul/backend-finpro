@@ -125,6 +125,7 @@ model JobPosting {
   description     String   @db.Text
   thumbnail       String   @default("")
   hasPreselection Boolean  @default(false) @map("has_preselection_test")
+  testPassingGrade  Int      @default(70) @map("test_passing_grade")
   isPublished     Boolean  @default(true) @map("is_published")
   postedAt        DateTime @default(now()) @map("posted_at")
   deadlineAt      DateTime @map("deadline_at")
@@ -145,8 +146,7 @@ model PreselectionQuestion {
   jobPostingId Int @map("job_posting_id")
 
   questionText  String @map("question_text") @db.Text
-  options       Json
-  correctAnswer String @map("correct_answer") @db.Char(1)
+  options      QuestionOption[] 
 
   // Relations
   jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
