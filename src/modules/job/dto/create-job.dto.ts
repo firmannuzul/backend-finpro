@@ -35,6 +35,18 @@ export class CreateJobDTO {
   @IsString()
   companyId!: string;
 
+  @IsNotEmpty()
+  @IsString()
+  experience!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  responsibility!: string;
+
+  @IsNotEmpty()
+  @IsString()
+  requirement!: string;
+
   @IsOptional()
   // @IsDate()
   deadlineAt!: Date;

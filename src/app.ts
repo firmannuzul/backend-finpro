@@ -16,6 +16,14 @@ import { JobService } from "./modules/job/job.service.js";
 import { JobController } from "./modules/job/job.controller.js";
 import { CloudinaryService } from "./modules/cloudinary/cloudinary.service.js";
 import { JobRouter } from "./modules/job/job.router.js";
+import { UserService } from "./modules/user/user.service.js";
+import { UserController } from "./modules/user/user.controller.js";
+import { UserRouter } from "./modules/user/user.router.js";
+import { JwtMiddleware } from "./middlewares/jwt.middleware.js";
+import { UploaderMiddleware } from "./middlewares/uploader.middleware.js";
+import { ApplicantService } from "./modules/applicant/applicant.service.js";
+import { ApplicantController } from "./modules/applicant/applicant.controller.js";
+import { ApplicantRouter } from "./modules/applicant/applicant.router.js";
 
 export class App {
   app: Express;
@@ -42,14 +50,27 @@ export class App {
     const sampleService = new SampleService(prismaClient);
     const authService = new AuthService(prismaClient);
     const jobService = new JobService(prismaClient, cloudinaryService);
+    const userService = new UserService(prismaClient, cloudinaryService);
+    const applicantService = new ApplicantService(
+      prismaClient,
+      cloudinaryService,
+    );
 
     // controllers
     const sampleController = new SampleController(sampleService);
     const authController = new AuthController(authService);
     const jobController = new JobController(jobService);
+    const userController = new UserController(userService);
+    const applicantController = new ApplicantController(applicantService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
+
+    //jwt
+    const jwtMiddleware = new JwtMiddleware();
+
+    //uploader
+    const uploaderMiddleware = new UploaderMiddleware();
 
     // routers
     const sampleRouter = new SampleRouter(
@@ -61,9 +82,25 @@ export class App {
 
     const jobRouter = new JobRouter(jobController, validationMiddleware);
 
+    const userRouter = new UserRouter(
+      userController,
+      validationMiddleware,
+      jwtMiddleware,
+      uploaderMiddleware,
+    );
+
+    const applicantRouter = new ApplicantRouter(
+      applicantController,
+      validationMiddleware,
+      jwtMiddleware,
+      uploaderMiddleware,
+    );
+
     this.app.use("/samples", sampleRouter.getRouter());
     this.app.use("/auth", authRouter.getRouter());
     this.app.use("/job", jobRouter.getRouter());
+    this.app.use("/user", userRouter.getRouter());
+    this.app.use("/applicant", applicantRouter.getRouter());
   }
 
   private handleError() {
