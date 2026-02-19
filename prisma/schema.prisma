@@ -19,8 +19,7 @@ enum Role {
 
 enum AuthProvider {
   GOOGLE
-  FACEBOOK
-  TWITTER
+  CREDENTIALS
 }
 
 enum Gender {
@@ -71,12 +70,12 @@ model ApplicantProfile {
   // FK tetap userId, tapi referensinya ke User.id
   userId Int @unique @map("user_id")
 
-  name          String
-  gender        Gender
-  dob           DateTime @db.Date
-  phone         String
-  address       String   @db.Text
-  lastEducation String   @map("last_education")
+  name          String?
+  gender        Gender?
+  dob           DateTime? @db.Date
+  phone         String?
+  address       String ?  @db.Text
+  lastEducation String?   @map("last_education")
   photoPath     String?  @map("photo_path")
   cvResumePath  String?  @map("cv_resume_path")
 
@@ -114,19 +113,22 @@ model JobPosting {
   // FK tetap companyId
   companyId Int @map("company_id")
 
-  title             String
-  slug              String   @default("")
-  category          String
-  location          String
-  salaryMin         Decimal  @map("salary_min") @db.Decimal(15, 2)
-  salaryMax         Decimal  @map("salary_max") @db.Decimal(15, 2)
-  description       String   @db.Text
-  thumbnail         String   @default("")
-  hasPreselection   Boolean  @default(false) @map("has_preselection_test")
+  title           String
+  slug            String   @default("")
+  experience      String?
+  responsibility  String?
+  requirement     String?
+  category        String
+  location        String
+  salaryMin       Decimal  @map("salary_min") @db.Decimal(15, 2)
+  salaryMax       Decimal  @map("salary_max") @db.Decimal(15, 2)
+  description     String   @db.Text
+  thumbnail       String   @default("")
+  hasPreselection Boolean  @default(false) @map("has_preselection_test")
   testPassingGrade  Int      @default(70) @map("test_passing_grade")
-  isPublished       Boolean  @default(true) @map("is_published")
-  postedAt          DateTime @default(now()) @map("posted_at")
-  deadlineAt        DateTime @map("deadline_at")
+  isPublished     Boolean  @default(true) @map("is_published")
+  postedAt        DateTime @default(now()) @map("posted_at")
+  deadlineAt      DateTime @map("deadline_at")
 
   // Relations
   company      CompanyProfile         @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -174,7 +176,12 @@ model Application {
   jobPostingId Int @map("job_posting_id")
 
   cvFilePath        String            @map("cv_file_path")
-  expectedSalary    Decimal           @map("expected_salary") @db.Decimal(15, 2)
+  fullName          String
+  email             String
+  phoneNumber       String
+  address           String
+  lastEducation     String
+  expectedSalary    Decimal?          @map("expected_salary") @db.Decimal(15, 2)
   preselectionScore Int?              @map("preselection_score")
   status            ApplicationStatus @default(PENDING)
   rejectionReason   String?           @map("rejection_reason") @db.Text
@@ -218,4 +225,14 @@ model SavedJob {
   jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
 
   @@map("saved_jobs")
+}
+
+model Sample {
+  id        Int       @id @default(autoincrement())
+  name      String
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("samples")
 }

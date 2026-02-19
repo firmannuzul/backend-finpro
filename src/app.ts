@@ -22,6 +22,14 @@ import { AssessmentRouter } from "./modules/assessment/assessment.router.js";
 import { ApplicationService } from "./modules/application/application.service.js";
 import { ApplicationController } from "./modules/application/application.controller.js";
 import { ApplicationRouter } from "./modules/application/application.router.js";
+import { UserService } from "./modules/user/user.service.js";
+import { UserController } from "./modules/user/user.controller.js";
+import { UserRouter } from "./modules/user/user.router.js";
+import { JwtMiddleware } from "./middlewares/jwt.middleware.js";
+import { UploaderMiddleware } from "./middlewares/uploader.middleware.js";
+import { ApplicantService } from "./modules/applicant/applicant.service.js";
+import { ApplicantController } from "./modules/applicant/applicant.controller.js";
+import { ApplicantRouter } from "./modules/applicant/applicant.router.js";
 
 export class App {
   app: Express;
@@ -50,6 +58,11 @@ export class App {
     const jobService = new JobService(prismaClient, cloudinaryService);
     const assessmentService = new AssessmentService(prisma);
     const applicationService = new ApplicationService(prisma);
+    const userService = new UserService(prismaClient, cloudinaryService);
+    const applicantService = new ApplicantService(
+      prismaClient,
+      cloudinaryService,
+    );
 
     // controllers
     const sampleController = new SampleController(sampleService);
@@ -57,9 +70,17 @@ export class App {
     const jobController = new JobController(jobService);
     const assessmentController = new AssessmentController(assessmentService);
     const applicationController = new ApplicationController(applicationService);
+    const userController = new UserController(userService);
+    const applicantController = new ApplicantController(applicantService);
 
     // middlewares
     const validationMiddleware = new ValidationMiddleware();
+
+    //jwt
+    const jwtMiddleware = new JwtMiddleware();
+
+    //uploader
+    const uploaderMiddleware = new UploaderMiddleware();
 
     // routers
     const sampleRouter = new SampleRouter(
@@ -77,12 +98,27 @@ export class App {
     );
 
     const applicationRouter = new ApplicationRouter(applicationController);
+    const userRouter = new UserRouter(
+      userController,
+      validationMiddleware,
+      jwtMiddleware,
+      uploaderMiddleware,
+    );
+
+    const applicantRouter = new ApplicantRouter(
+      applicantController,
+      validationMiddleware,
+      jwtMiddleware,
+      uploaderMiddleware,
+    );
 
     this.app.use("/samples", sampleRouter.getRouter());
     this.app.use("/auth", authRouter.getRouter());
     this.app.use("/job", jobRouter.getRouter());
     this.app.use("/assessment", assessmentRouter.getRouter());
     this.app.use("/applications", applicationRouter.getRouter());
+    this.app.use("/user", userRouter.getRouter());
+    this.app.use("/applicant", applicantRouter.getRouter());
   }
 
   private handleError() {
