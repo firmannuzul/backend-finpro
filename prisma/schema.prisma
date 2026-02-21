@@ -42,6 +42,8 @@ model User {
 
   email    String  @unique
   password String?
+  name     String?
+  phone    String?
   role     Role    @default(APPLICANT)
 
   provider          AuthProvider? @map("provider")
@@ -74,10 +76,10 @@ model ApplicantProfile {
   gender        Gender?
   dob           DateTime? @db.Date
   phone         String?
-  address       String ?  @db.Text
+  address       String?   @db.Text
   lastEducation String?   @map("last_education")
-  photoPath     String?  @map("photo_path")
-  cvResumePath  String?  @map("cv_resume_path")
+  photoPath     String?   @map("photo_path")
+  cvResumePath  String?   @map("cv_resume_path")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -92,16 +94,17 @@ model CompanyProfile {
   // FK tetap userId
   userId Int @unique @map("user_id")
 
-  companyName String  @map("company_name")
-  description String  @db.Text
+  companyName String?  @map("company_name")
+  description String?  @db.Text
   logoPath    String? @map("logo_path")
   websiteUrl  String? @map("website_url")
-  industry    String
-  location    String
+  industry    String?
+  location    String?
 
   // Relations
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  jobPostings JobPosting[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobPostings  JobPosting[]
+  applications Application[]
 
   @@map("company_profiles")
 }
@@ -113,22 +116,22 @@ model JobPosting {
   // FK tetap companyId
   companyId Int @map("company_id")
 
-  title           String
-  slug            String   @default("")
-  experience      String?
-  responsibility  String?
-  requirement     String?
-  category        String
-  location        String
-  salaryMin       Decimal  @map("salary_min") @db.Decimal(15, 2)
-  salaryMax       Decimal  @map("salary_max") @db.Decimal(15, 2)
-  description     String   @db.Text
-  thumbnail       String   @default("")
-  hasPreselection Boolean  @default(false) @map("has_preselection_test")
-  testPassingGrade  Int      @default(70) @map("test_passing_grade")
-  isPublished     Boolean  @default(true) @map("is_published")
-  postedAt        DateTime @default(now()) @map("posted_at")
-  deadlineAt      DateTime @map("deadline_at")
+  title            String
+  slug             String   @default("")
+  experience       String?
+  responsibility   String?
+  requirement      String?
+  category         String
+  location         String
+  salaryMin        Decimal  @map("salary_min") @db.Decimal(15, 2)
+  salaryMax        Decimal  @map("salary_max") @db.Decimal(15, 2)
+  description      String   @db.Text
+  thumbnail        String   @default("")
+  hasPreselection  Boolean  @default(false) @map("has_preselection_test")
+  testPassingGrade Int      @default(70) @map("test_passing_grade")
+  isPublished      Boolean  @default(true) @map("is_published")
+  postedAt         DateTime @default(now()) @map("posted_at")
+  deadlineAt       DateTime @map("deadline_at")
 
   // Relations
   company      CompanyProfile         @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -145,8 +148,8 @@ model PreselectionQuestion {
 
   jobPostingId Int @map("job_posting_id")
 
-  questionText  String @map("question_text") @db.Text
-  options      QuestionOption[] 
+  questionText String @map("question_text") @db.Text
+  // options      QuestionOption[]
 
   // Relations
   jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
@@ -160,6 +163,7 @@ model Application {
 
   userId       Int @map("user_id")
   jobPostingId Int @map("job_posting_id")
+  companyId    Int @map("company_id")
 
   cvFilePath        String            @map("cv_file_path")
   fullName          String
@@ -174,6 +178,8 @@ model Application {
   appliedAt         DateTime          @default(now()) @map("applied_at")
 
   // Relations
+  company CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   applicant  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   jobPosting JobPosting  @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
   interviews Interview[]

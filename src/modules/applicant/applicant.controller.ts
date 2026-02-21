@@ -23,4 +23,23 @@ export class ApplicantController {
     );
     res.status(200).send(result);
   };
+
+  getApplies = async (req: Request, res: Response) => {
+    const result = await this.applicantService.getApplies();
+    return res.status(200).send(result);
+  };
+
+  getApplied = async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+    const result = await this.applicantService.getApplied(id);
+    return res.status(200).send(result);
+  };
+
+  getAppliedMe = async (req: Request, res: Response) => {
+    const user = res.locals.user;
+
+    const result = await this.applicantService.getAppliedMe(user.id);
+
+    return res.status(200).send(result);
+  };
 }

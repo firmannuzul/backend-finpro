@@ -1,28 +1,24 @@
 import { Gender } from "@prisma/client";
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class UpdateProfileDTO {
+export class UpdateCompanyProfileDTO {
   @IsOptional()
   @IsString()
-  name!: string;
-
-  @IsEnum(Gender, {})
-  @IsOptional()
-  gender!: Gender;
+  companyName!: string;
 
   @IsOptional()
   @IsString()
-  dob!: string;
+  description!: string;
 
   @IsOptional()
   @IsString()
-  phone!: string;
+  websiteUrl!: string;
 
   @IsOptional()
   @IsString()
-  address!: string;
+  industry!: string;
 
   @IsOptional()
   @IsString()
-  lastEducation!: string;
+  location!: string;
 }
