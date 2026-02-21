@@ -1,17 +1,17 @@
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 
-export class ApplyJobDTO {
+export class AppliedListDTO {
   @IsNotEmpty()
   @IsString()
-  fullName!: string;
+  appliedAt!: string;
 
   @IsNotEmpty()
   @IsString()
-  email!: string;
+  status!: string;
 
   @IsNotEmpty()
   @IsString()
-  phoneNumber!: string;
+  thumbnail!: string;
 
   @IsNotEmpty()
   @IsString()
@@ -20,14 +20,6 @@ export class ApplyJobDTO {
   @IsNotEmpty()
   @IsString()
   lastEducation!: string;
-
-  //   @IsNotEmpty()
-  //   @IsString()
-  //   userId!: string;
-
-  @IsNotEmpty()
-  @IsString()
-  jobPostingId!: string;
 
   @IsOptional()
   @IsString()

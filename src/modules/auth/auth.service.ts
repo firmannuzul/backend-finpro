@@ -13,6 +13,7 @@ import { prismaExclude } from "../../prisma.js";
 import { MailService } from "../mail/mail.service.js";
 import { ForgotPasswordDTO } from "./dto/forgot-password.dto.js";
 import { ResetPasswordDTO } from "./dto/reset-password.dto.js";
+import { RegisterAdminDTO } from "./dto/register-admin.dto.js";
 
 export class AuthService {
   constructor(
@@ -34,6 +35,29 @@ export class AuthService {
         email: body.email,
         password: hashedPassword,
         role: body.role ?? "APPLICANT",
+        provider: AuthProvider.CREDENTIALS,
+      },
+    });
+
+    return { message: "register success" };
+  };
+
+  registerAdmin = async (body: RegisterAdminDTO) => {
+    const user = await this.prisma.user.findFirst({
+      where: { email: body.email },
+    });
+
+    if (user) throw new ApiError("Email already exist", 400);
+
+    const hashedPassword = await hashPassword(body.password);
+
+    await this.prisma.user.create({
+      data: {
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        password: hashedPassword,
+        role: body.role ?? "ADMIN",
         provider: AuthProvider.CREDENTIALS,
       },
     });

@@ -2,6 +2,7 @@ import { PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { comparePassword, hashPassword } from "../../utils/password.js";
 import { CloudinaryService } from "../cloudinary/cloudinary.service.js";
+import { UpdateCompanyProfileDTO } from "./dto/update-company-profile.dto.js";
 import { UpdateProfileDTO } from "./dto/update-profile.dto.js";
 
 export class UserService {
@@ -9,58 +10,6 @@ export class UserService {
     private prisma: PrismaClient,
     private cloudinaryService: CloudinaryService,
   ) {}
-
-  // updateProfile = async (
-  //   userId: number,
-  //   body: UpdateProfileDTO,
-  //   photoPath?: Express.Multer.File,
-  //   cvResumePath?: Express.Multer.File,
-  // ) => {
-  //   let photoUrl: string | undefined;
-  //   let cvUrl: string | undefined;
-
-  //   if (photoPath) {
-  //     const uploadRes = await this.cloudinaryService.upload(photoPath);
-  //     photoUrl = uploadRes.secure_url;
-  //   }
-
-  //   // if (cvResumePath) {
-  //   //   const uploadRes =
-  //   //     await this.cloudinaryService.upload(cvResumePath);
-  //   //   cvUrl = uploadRes.secure_url;
-  //   // }
-
-  //   if (cvResumePath) {
-  //     const uploadRes = await this.cloudinaryService.upload(cvResumePath);
-  //     cvUrl = uploadRes.secure_url;
-  //   }
-
-  //   await this.prisma.applicantProfile.upsert({
-  //     where: { userId },
-  //     update: {
-  //       ...body,
-  //       ...(photoUrl && { photoPath: photoUrl }),
-  //       ...(cvUrl && { cvResumePath: cvUrl }),
-  //       dob: new Date(body.dob),
-  //     },
-  //     create: {
-  //       userId,
-  //       ...body,
-  //       dob: new Date(body.dob),
-  //       photoPath: photoUrl,
-  //       cvResumePath: cvUrl,
-  //     },
-  //   });
-
-  //   return {
-  //     message: "Update Profile success",
-  //     requestBody: body,
-  //     photoUploaded: !!photoUrl,
-  //     cvUploaded: !!cvUrl,
-  //     photoUrl,
-  //     cvUrl,
-  //   };
-  // };
 
   updateProfile = async (
     userId: number,
@@ -116,6 +65,42 @@ export class UserService {
     };
   };
 
+  updateCompanyProfile = async (
+    userId: number,
+    body: UpdateCompanyProfileDTO,
+    logoPath?: Express.Multer.File,
+  ) => {
+    let photoUrl: string | undefined;
+
+    if (logoPath) {
+      const uploadRes = await this.cloudinaryService.upload(logoPath);
+      photoUrl = uploadRes.secure_url;
+    }
+
+    const updateData: any = {};
+
+    if (body.companyName) updateData.companyName = body.companyName;
+    if (body.description) updateData.description = body.description;
+    if (body.industry) updateData.industry = body.industry;
+    if (body.location) updateData.location = body.location;
+    if (body.websiteUrl) updateData.websiteUrl = body.websiteUrl;
+    if (photoUrl) updateData.logoPath = photoUrl;
+
+    await this.prisma.companyProfile.upsert({
+      where: { userId },
+      update: updateData,
+      create: {
+        userId,
+        ...updateData,
+      },
+    });
+    return {
+      message: "Update Profile success",
+      updatedFields: Object.keys(updateData),
+      photoUploaded: !!photoUrl,
+    };
+  };
+
   changePassword = async (
     userId: number,
     currentPassword: string,
@@ -157,5 +142,23 @@ export class UserService {
     return this.prisma.applicantProfile.findUnique({
       where: { userId },
     });
+  };
+
+  getProfileCompany = async (userId: number) => {
+    return this.prisma.companyProfile.findUnique({
+      where: { userId },
+    });
+  };
+
+  getMyProfile = async (userId: number) => {
+    const [companyProfile, applicantProfile] = await Promise.all([
+      this.prisma.companyProfile.findUnique({ where: { userId } }),
+      this.prisma.applicantProfile.findUnique({ where: { userId } }),
+    ]);
+
+    return {
+      companyProfile,
+      applicantProfile,
+    };
   };
 }

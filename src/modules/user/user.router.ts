@@ -6,6 +6,7 @@ import { JwtMiddleware } from "../../middlewares/jwt.middleware.js";
 import { UpdateProfileDTO } from "./dto/update-profile.dto.js";
 import { UploaderMiddleware } from "../../middlewares/uploader.middleware.js";
 import { ChangePasswordDTO } from "./dto/change-password.dto.js";
+import { UpdateCompanyProfileDTO } from "./dto/update-company-profile.dto.js";
 
 export class UserRouter {
   private router: Router;
@@ -35,6 +36,16 @@ export class UserRouter {
     );
 
     this.router.patch(
+      "/updateprofile/companyprofile",
+      this.jwtMiddleware.verifyToken(process.env.JWT_SECRET!),
+
+      this.uploaderMiddleware.upload().fields([{ name: "photo", maxCount: 1 }]),
+      this.validationMiddleware.validateBody(UpdateCompanyProfileDTO),
+
+      this.userController.updateCompanyProfile,
+    );
+
+    this.router.patch(
       "/updateprofile/change-password",
       this.jwtMiddleware.verifyToken(process.env.JWT_SECRET!),
       this.validationMiddleware.validateBody(ChangePasswordDTO),
@@ -45,6 +56,18 @@ export class UserRouter {
       "/profile",
       this.jwtMiddleware.verifyToken(process.env.JWT_SECRET!),
       this.userController.getProfile,
+    );
+
+    this.router.get(
+      "/profile-company",
+      this.jwtMiddleware.verifyToken(process.env.JWT_SECRET!),
+      this.userController.getProfileCompany,
+    );
+
+    this.router.get(
+      "/me/profile",
+      this.jwtMiddleware.verifyToken(process.env.JWT_SECRET!),
+      this.userController.getMyProfile,
     );
   };
 

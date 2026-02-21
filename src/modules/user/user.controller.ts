@@ -8,11 +8,6 @@ export class UserController {
     const userId = res.locals.user.id;
     const body = req.body;
 
-    console.log("CONTROLLER BODY:", body);
-    console.log("FILES RAW:", req.files);
-
-    console.log("FILES RAW:", req.files); // 👈 TARUH DI SINI
-
     const files = req.files as {
       photo?: Express.Multer.File[];
       cv?: Express.Multer.File[];
@@ -25,6 +20,23 @@ export class UserController {
       body,
       filePhoto,
       fileCV,
+    );
+    res.status(200).send(result);
+  };
+
+  updateCompanyProfile = async (req: Request, res: Response) => {
+    const userId = res.locals.user.id;
+    const body = req.body;
+
+    const files = req.files as {
+      photo?: Express.Multer.File[];
+    };
+
+    const filePhoto = files?.photo?.[0];
+    const result = await this.userService.updateCompanyProfile(
+      userId,
+      body,
+      filePhoto,
     );
     res.status(200).send(result);
   };
@@ -46,6 +58,22 @@ export class UserController {
     const userId = res.locals.user.id;
 
     const profile = await this.userService.getProfile(userId);
+
+    res.status(200).send(profile);
+  };
+
+  getProfileCompany = async (req: Request, res: Response) => {
+    const userId = res.locals.user.id;
+
+    const profile = await this.userService.getProfileCompany(userId);
+
+    res.status(200).send(profile);
+  };
+
+  getMyProfile = async (req: Request, res: Response) => {
+    const userId = res.locals.user.id;
+
+    const profile = await this.userService.getMyProfile(userId);
 
     res.status(200).send(profile);
   };

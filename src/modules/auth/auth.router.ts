@@ -7,6 +7,7 @@ import { LoginDTO } from "./dto/login.dto.js";
 import { RegisterDTO } from "./dto/register.dto.js";
 import { ResetPasswordDTO } from "./dto/reset-password.dto.js";
 import { JwtMiddleware } from "../../middlewares/jwt.middleware.js";
+import { RegisterAdminDTO } from "./dto/register-admin.dto.js";
 
 export class AuthRouter {
   private router: Router;
@@ -26,6 +27,11 @@ export class AuthRouter {
       "/register",
       this.validationMiddleware.validateBody(RegisterDTO),
       this.authController.register,
+    );
+    this.router.post(
+      "/register-admin",
+      this.validationMiddleware.validateBody(RegisterAdminDTO),
+      this.authController.registerAdmin,
     );
     this.router.post(
       "/login",
