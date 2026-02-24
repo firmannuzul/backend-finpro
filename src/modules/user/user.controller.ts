@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { UserService } from "./user.service.js";
+import { plainToInstance } from "class-transformer";
+import { PaginationQueryParams } from "../pagination/dto/pagination.dto.js";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -76,5 +78,16 @@ export class UserController {
     const profile = await this.userService.getMyProfile(userId);
 
     res.status(200).send(profile);
+  };
+
+  getCompanies = async (req: Request, res: Response) => {
+    const result = await this.userService.getCompanies();
+    res.status(200).send(result);
+  };
+
+  getCompanie = async (req: Request, res: Response) => {
+    const query = plainToInstance(PaginationQueryParams, req.query);
+    const result = await this.userService.getCompanie(query);
+    res.status(200).send(result);
   };
 }

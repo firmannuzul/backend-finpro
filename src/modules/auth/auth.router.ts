@@ -1,13 +1,12 @@
 import { Router } from "express";
+import { JwtMiddleware } from "../../middlewares/jwt.middleware.js";
 import { ValidationMiddleware } from "../../middlewares/validation.middleware.js";
 import { AuthController } from "./auth.controller.js";
 import { ForgotPasswordDTO } from "./dto/forgot-password.dto.js";
-import { GoogleLoginDTO } from "./dto/google.login.dto.js";
 import { LoginDTO } from "./dto/login.dto.js";
+import { RegisterAdminDTO } from "./dto/register-admin.dto.js";
 import { RegisterDTO } from "./dto/register.dto.js";
 import { ResetPasswordDTO } from "./dto/reset-password.dto.js";
-import { JwtMiddleware } from "../../middlewares/jwt.middleware.js";
-import { RegisterAdminDTO } from "./dto/register-admin.dto.js";
 
 export class AuthRouter {
   private router: Router;
@@ -37,12 +36,6 @@ export class AuthRouter {
       "/login",
       this.validationMiddleware.validateBody(LoginDTO),
       this.authController.login,
-    );
-
-    this.router.post(
-      "/google",
-      this.validationMiddleware.validateBody(GoogleLoginDTO),
-      this.authController.google,
     );
 
     this.router.post(

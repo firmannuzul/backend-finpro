@@ -69,6 +69,10 @@ export class UserRouter {
       this.jwtMiddleware.verifyToken(process.env.JWT_SECRET!),
       this.userController.getMyProfile,
     );
+
+    this.router.get("/companies", this.userController.getCompanies);
+
+    this.router.get("/companie", this.userController.getCompanie);
   };
 
   getRouter = () => {
