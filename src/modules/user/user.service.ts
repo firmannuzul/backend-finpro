@@ -2,6 +2,7 @@ import { PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { comparePassword, hashPassword } from "../../utils/password.js";
 import { CloudinaryService } from "../cloudinary/cloudinary.service.js";
+import { PaginationQueryParams } from "../pagination/dto/pagination.dto.js";
 import { UpdateCompanyProfileDTO } from "./dto/update-company-profile.dto.js";
 import { UpdateProfileDTO } from "./dto/update-profile.dto.js";
 
@@ -159,6 +160,26 @@ export class UserService {
     return {
       companyProfile,
       applicantProfile,
+    };
+  };
+
+  getCompanies = async () => {
+    const companies = await this.prisma.companyProfile.findMany();
+    return companies;
+  };
+
+  getCompanie = async (query: PaginationQueryParams) => {
+    const { page, take, sortBy, sortOrder } = query;
+
+    const companies = await this.prisma.companyProfile.findMany({
+      take: take,
+      skip: (page - 1) * take,
+      // orderBy: {[sortBy:sortOrder]}
+    });
+    const total = await this.prisma.companyProfile.count();
+    return {
+      data: companies,
+      meta: { page, take, total },
     };
   };
 }

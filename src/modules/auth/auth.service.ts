@@ -5,15 +5,12 @@ import {
 } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { comparePassword, hashPassword } from "../../utils/password.js";
-import { LoginDTO } from "./dto/login.dto.js";
-import { RegisterDTO } from "./dto/register.dto.js";
-import { decrypt } from "../../lib/crypto.js";
-import { getUserInfoService } from "./get-user-info.service.js";
-import { prismaExclude } from "../../prisma.js";
 import { MailService } from "../mail/mail.service.js";
 import { ForgotPasswordDTO } from "./dto/forgot-password.dto.js";
-import { ResetPasswordDTO } from "./dto/reset-password.dto.js";
+import { LoginDTO } from "./dto/login.dto.js";
 import { RegisterAdminDTO } from "./dto/register-admin.dto.js";
+import { RegisterDTO } from "./dto/register.dto.js";
+import { ResetPasswordDTO } from "./dto/reset-password.dto.js";
 
 export class AuthService {
   constructor(
@@ -82,60 +79,6 @@ export class AuthService {
 
     const { password, ...userWithoutPassword } = user;
     return { ...userWithoutPassword, accessToken };
-  };
-
-  googleService = async (encryptedAccessToken: string) => {
-    try {
-      const accessToken = decrypt(encryptedAccessToken);
-
-      const { email } = await getUserInfoService(accessToken);
-
-      // const user = await this.prisma.user.findFirst({
-      //   where: { email },
-      //   select: prismaExclude("User", ["password"]),
-      // });
-
-      const user = await this.prisma.user.findFirst({
-        where: { email },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          provider: true,
-        },
-      });
-
-      if (!user) {
-        // return await this.prisma.user.create({
-        //   data: {
-        //     email,
-        //     provider: AuthProvider.GOOGLE,
-        //   },
-        //   select: prismaExclude("User", ["password"]),
-        // });
-
-        return await this.prisma.user.create({
-          data: {
-            email,
-            provider: AuthProvider.GOOGLE,
-          },
-          select: {
-            id: true,
-            email: true,
-            role: true,
-            provider: true,
-          },
-        });
-      }
-
-      if (user.provider !== AuthProvider.GOOGLE) {
-        throw new Error("Please login using email");
-      }
-
-      return user;
-    } catch (error) {
-      throw error;
-    }
   };
 
   forgotPassword = async (body: ForgotPasswordDTO) => {
