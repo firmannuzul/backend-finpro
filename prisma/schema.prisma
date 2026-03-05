@@ -94,8 +94,8 @@ model CompanyProfile {
   // FK tetap userId
   userId Int @unique @map("user_id")
 
-  companyName String?  @map("company_name")
-  description String?  @db.Text
+  companyName String? @map("company_name")
+  description String? @db.Text
   logoPath    String? @map("logo_path")
   websiteUrl  String? @map("website_url")
   industry    String?
@@ -121,6 +121,8 @@ model JobPosting {
   experience       String?
   responsibility   String?
   requirement      String?
+  latitude         Float? 
+  longitude        Float?
   category         String
   location         String
   salaryMin        Decimal  @map("salary_min") @db.Decimal(15, 2)

@@ -33,4 +33,41 @@ export class JobController {
     const result = await this.jobService.getJobBySlug(slug);
     res.status(200).send(result);
   };
+
+  getCompanyJobs = async (req: Request, res: Response) => {
+    const companyId = Number(req.params.id);
+    const page = Number(req.query.page) || 1;
+    const take = Number(req.query.take) || 5;
+
+    if (!companyId) {
+      res.status(400);
+      throw new ApiError("Invalid company id", 400);
+    }
+
+    const result = await this.jobService.getCompanyJobs(companyId, page, take);
+
+    res.status(200).send(result);
+  };
+
+  getNearbyJobs = async (req: Request, res: Response) => {
+    const lat = Number(req.query.lat);
+    const lng = Number(req.query.lng);
+    const radius = Number(req.query.radius) || 10;
+    const page = Number(req.query.page) || 1;
+    const take = Number(req.query.take) || 10;
+
+    if (!lat || !lng) {
+      throw new ApiError("Latitude and longitude are required", 400);
+    }
+
+    const result = await this.jobService.getNearbyJobs(
+      lat,
+      lng,
+      radius,
+      page,
+      take,
+    );
+
+    res.status(200).json(result);
+  };
 }

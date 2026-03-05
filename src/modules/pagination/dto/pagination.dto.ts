@@ -19,4 +19,12 @@ export class PaginationQueryParams {
   @IsOptional()
   @IsString()
   sortBy: string = "postedAt";
+
+  @IsOptional()
+  @IsString()
+  from?: string; // 🔥 TAMBAH
+
+  @IsOptional()
+  @IsString()
+  to?: string; // 🔥 TAMBAH
 }
