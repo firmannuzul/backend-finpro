@@ -98,7 +98,7 @@ export class AuthService {
       "Forgot Password",
       "forgot-password",
       {
-        resetUrl: `http://localhost:3000/reset-password/${accessToken}`,
+        resetUrl: `${process.env.BASE_URL_FE}/reset-password/${accessToken}`,
       },
     );
     return { message: "send email success" };
