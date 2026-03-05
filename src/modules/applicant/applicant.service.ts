@@ -1,6 +1,7 @@
 import { PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
 import { CloudinaryService } from "../cloudinary/cloudinary.service.js";
+import { PaginationQueryParams } from "../pagination/dto/pagination.dto.js";
 import { ApplyJobDTO } from "./dto/apply-job.dto.js";
 
 export class ApplicantService {
@@ -53,37 +54,28 @@ export class ApplicantService {
     return { message: " apply job success", data: apply };
   };
 
-  getApplies = async () => {
-    const applications = await this.prisma.application.findMany();
-    return applications;
-  };
+  getAppliedMe1 = async (userId: number, query: PaginationQueryParams) => {
+    const { page, take, sortBy, sortOrder } = query;
 
-  getApplied = async (userId: number) => {
-    const application = await this.prisma.application.findMany({
-      where: { userId: userId },
-      include: {
-        jobPosting: true,
-      },
-    });
-
-    if (!application) throw new ApiError("Application not found", 404);
-
-    return application;
-  };
-
-  getAppliedMe = async (userId: number) => {
     const application = await this.prisma.application.findMany({
       where: { userId },
+      take: take,
+      skip: (page - 1) * take,
       include: { jobPosting: true, company: true },
       orderBy: {
         appliedAt: "desc",
       },
     });
-
+    const total = await this.prisma.application.count({
+      where: { userId },
+    });
     if (application.length === 0) {
       throw new ApiError("Application not found", 404);
     }
 
-    return application;
+    return {
+      data: application,
+      meta: { page, total, take },
+    };
   };
 }

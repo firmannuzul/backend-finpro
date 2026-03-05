@@ -18,28 +18,6 @@ export class CloudinaryService {
     return readable;
   };
 
-  // upload = (file: Express.Multer.File): Promise<UploadApiResponse> => {
-  //   return new Promise((resolve, reject) => {
-  //     const readableStream = this.bufferToStream(file.buffer);
-
-  //     const uploadStream = cloudinary.uploader.upload_stream(
-  //       {
-  //         resource_type: "raw",
-  //       },
-  //       (err, result) => {
-  //         if (err) return reject(err);
-
-  //         if (!result)
-  //           return reject(new Error("Upload failed: No result returned"));
-
-  //         resolve(result);
-  //       },
-  //     );
-
-  //     readableStream.pipe(uploadStream);
-  //   });
-  // };
-
   upload = (file: Express.Multer.File): Promise<UploadApiResponse> => {
     return new Promise((resolve, reject) => {
       const readableStream = this.bufferToStream(file.buffer);

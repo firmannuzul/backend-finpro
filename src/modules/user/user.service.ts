@@ -163,11 +163,6 @@ export class UserService {
     };
   };
 
-  getCompanies = async () => {
-    const companies = await this.prisma.companyProfile.findMany();
-    return companies;
-  };
-
   getCompanie = async (query: PaginationQueryParams) => {
     const { page, take, sortBy, sortOrder } = query;
 
@@ -181,5 +176,14 @@ export class UserService {
       data: companies,
       meta: { page, take, total },
     };
+  };
+
+  getCompanyById = async (id: number) => {
+    return this.prisma.companyProfile.findUnique({
+      where: { id },
+      include: {
+        jobPostings: true,
+      },
+    });
   };
 }

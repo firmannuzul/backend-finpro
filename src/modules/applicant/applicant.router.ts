@@ -28,13 +28,12 @@ export class ApplicantRouter {
       this.validationMiddleware.validateBody(ApplyJobDTO),
       this.applicantController.applyJob,
     );
-    this.router.get("/", this.applicantController.getApplies);
+
     this.router.get(
-      "/me",
+      "/me1",
       this.jwtMiddleware.verifyToken(process.env.JWT_SECRET!),
-      this.applicantController.getAppliedMe,
+      this.applicantController.getAppliedMe1,
     );
-    this.router.get("/:id", this.applicantController.getApplied);
   };
 
   getRouter = () => {

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { UserService } from "./user.service.js";
 import { plainToInstance } from "class-transformer";
 import { PaginationQueryParams } from "../pagination/dto/pagination.dto.js";
+import { ApiError } from "../../utils/api-error.js";
 
 export class UserController {
   constructor(private userService: UserService) {}
@@ -80,14 +81,25 @@ export class UserController {
     res.status(200).send(profile);
   };
 
-  getCompanies = async (req: Request, res: Response) => {
-    const result = await this.userService.getCompanies();
-    res.status(200).send(result);
-  };
-
   getCompanie = async (req: Request, res: Response) => {
     const query = plainToInstance(PaginationQueryParams, req.query);
     const result = await this.userService.getCompanie(query);
     res.status(200).send(result);
+  };
+
+  getCompanyById = async (req: Request, res: Response) => {
+    const id = Number(req.params.id);
+
+    if (!id) {
+      throw new ApiError("Invalid company id", 400);
+    }
+
+    const company = await this.userService.getCompanyById(id);
+
+    if (!company) {
+      throw new ApiError("Company not found", 404);
+    }
+
+    res.status(200).json(company);
   };
 }

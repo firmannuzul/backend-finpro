@@ -30,8 +30,11 @@ export class JobRouter {
       this.validationMiddleware.validateBody(CreateJobDTO),
       this.jobController.createJob,
     );
+    this.router.get("/nearby", this.jobController.getNearbyJobs);
+
     this.router.get("/", this.jobController.getJobs);
     this.router.get("/:slug", this.jobController.getBlogBySlug);
+    this.router.get("/companies/:id/jobs", this.jobController.getCompanyJobs);
   };
 
   getRouter = () => {

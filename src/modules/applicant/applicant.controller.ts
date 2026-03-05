@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { ApplicantService } from "./applicant.service.js";
 import { ApiError } from "../../utils/api-error.js";
+import { plainToInstance } from "class-transformer";
+import { PaginationQueryParams } from "../pagination/dto/pagination.dto.js";
 
 export class ApplicantController {
   constructor(private applicantService: ApplicantService) {}
@@ -24,21 +26,12 @@ export class ApplicantController {
     res.status(200).send(result);
   };
 
-  getApplies = async (req: Request, res: Response) => {
-    const result = await this.applicantService.getApplies();
-    return res.status(200).send(result);
-  };
-
-  getApplied = async (req: Request, res: Response) => {
-    const id = Number(req.params.id);
-    const result = await this.applicantService.getApplied(id);
-    return res.status(200).send(result);
-  };
-
-  getAppliedMe = async (req: Request, res: Response) => {
+  getAppliedMe1 = async (req: Request, res: Response) => {
     const user = res.locals.user;
 
-    const result = await this.applicantService.getAppliedMe(user.id);
+    const query = plainToInstance(PaginationQueryParams, req.query);
+
+    const result = await this.applicantService.getAppliedMe1(user.id, query);
 
     return res.status(200).send(result);
   };

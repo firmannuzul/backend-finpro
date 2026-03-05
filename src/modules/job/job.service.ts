@@ -1,6 +1,8 @@
 import { Prisma, PrismaClient } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/api-error.js";
+import { calculateDistanceKm } from "../../utils/distance.js";
 import { generateSlug } from "../../utils/generate-slug.js";
+import { geocodeLocation } from "../../utils/geocode.js";
 import { CloudinaryService } from "../cloudinary/cloudinary.service.js";
 import { GetJobsDTO } from "../pagination/dto/get-jobs.dto.js";
 import { CreateJobDTO } from "./dto/create-job.dto.js";
@@ -20,6 +22,12 @@ export class JobService {
 
     const slug = generateSlug(body.title);
 
+    const geo = await geocodeLocation(body.location);
+
+    if (!geo) {
+      throw new ApiError("Location not found", 400);
+    }
+
     await this.prisma.jobPosting.create({
       data: {
         ...body,
@@ -30,6 +38,9 @@ export class JobService {
         experience: body.experience,
         slug: slug,
         thumbnail: secure_url,
+
+        latitude: geo.lat,
+        longitude: geo.lng,
       },
     });
 
@@ -47,7 +58,10 @@ export class JobService {
       category,
       timeRange,
       sort,
+      from,
+      to,
     } = query;
+    console.log("timeRange from frontend:", timeRange); // 👈 TARO DI SINI
 
     const whereClause: Prisma.JobPostingWhereInput = {};
 
@@ -112,6 +126,13 @@ export class JobService {
           gte: fromDate,
         };
       }
+
+      if (timeRange === "custom" && from && to) {
+        whereClause.postedAt = {
+          gte: new Date(from),
+          lte: new Date(to),
+        };
+      }
     }
 
     /* 🔃 Sorting (safe mapping) */
@@ -149,5 +170,101 @@ export class JobService {
     }
 
     return job;
+  };
+
+  getCompanyJobs = async (
+    companyId: number,
+    page: number = 1,
+    take: number = 5,
+  ) => {
+    const jobs = await this.prisma.jobPosting.findMany({
+      where: {
+        companyId,
+        isPublished: true, // 🔥 optional tapi bagus
+      },
+      take,
+      skip: (page - 1) * take,
+      orderBy: {
+        postedAt: "desc", // ✅ sesuai schema
+      },
+      include: {
+        company: {
+          select: {
+            companyName: true,
+          },
+        },
+      },
+    });
+
+    const total = await this.prisma.jobPosting.count({
+      where: {
+        companyId,
+        isPublished: true,
+      },
+    });
+
+    return {
+      data: jobs,
+      meta: {
+        page,
+        take,
+        total,
+      },
+    };
+  };
+
+  getNearbyJobs = async (
+    lat: number,
+    lng: number,
+    radius: number = 10,
+    page: number = 1,
+    take: number = 10,
+  ) => {
+    const jobs = await this.prisma.jobPosting.findMany({
+      where: {
+        latitude: { not: null },
+        longitude: { not: null },
+        isPublished: true,
+      },
+      include: {
+        company: {
+          select: {
+            companyName: true,
+            location: true,
+            industry: true,
+          },
+        },
+      },
+    });
+
+    const jobsWithDistance = jobs
+      .map((job) => {
+        const distance = calculateDistanceKm(
+          lat,
+          lng,
+          job.latitude!,
+          job.longitude!,
+        );
+
+        return {
+          ...job,
+          distance,
+        };
+      })
+      .filter((job) => job.distance <= radius)
+      .sort((a, b) => a.distance - b.distance);
+
+    const total = jobsWithDistance.length;
+
+    const paginated = jobsWithDistance.slice((page - 1) * take, page * take);
+
+    return {
+      data: paginated,
+      meta: {
+        page,
+        take,
+        total,
+      },
+    };
   };
 }

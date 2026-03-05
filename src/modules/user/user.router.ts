@@ -70,9 +70,9 @@ export class UserRouter {
       this.userController.getMyProfile,
     );
 
-    this.router.get("/companies", this.userController.getCompanies);
-
     this.router.get("/companie", this.userController.getCompanie);
+
+    this.router.get("/companies/:id", this.userController.getCompanyById);
   };
 
   getRouter = () => {
