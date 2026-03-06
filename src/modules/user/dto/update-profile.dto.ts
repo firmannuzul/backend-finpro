@@ -1,5 +1,5 @@
-import { Gender } from "@prisma/client";
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsEnum, IsOptional, IsString } from "class-validator";
+import { Gender } from "../../../../generated/prisma/enums.js";
 
 export class UpdateProfileDTO {
   @IsOptional()
