@@ -105,6 +105,19 @@ export class AuthService {
   };
 
   resetPassword = async (body: ResetPasswordDTO, authUserId: number) => {
+    const user = await this.prisma.user.findUnique({
+      where: { id: authUserId },
+    });
+
+    if (!user || !user.password) throw new ApiError("User not found", 404);
+
+    const isSamePassword = await comparePassword(body.password, user.password);
+    if (isSamePassword)
+      throw new ApiError(
+        "New password must be different from the current password",
+        400,
+      );
+
     const hashedPassword = await hashPassword(body.password);
 
     await this.prisma.user.update({

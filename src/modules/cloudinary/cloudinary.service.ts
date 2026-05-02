@@ -25,14 +25,31 @@ export class CloudinaryService {
       // 👉 cek apakah pdf
       const isPdf = file.mimetype === "application/pdf";
 
+      // const uploadStream = cloudinary.uploader.upload_stream(
+      //   {
+      //     resource_type: isPdf ? "raw" : "image", // default Cloudinary = image
+      //   },
+      //   (err, result) => {
+      //     if (err) return reject(err);
+      //     if (!result) return reject(new Error("Upload failed"));
+
+      //     resolve(result);
+      //   },
+      // );
+
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          resource_type: isPdf ? "raw" : "image", // default Cloudinary = image
+          resource_type: isPdf ? "raw" : "image",
+          ...(isPdf && {
+            format: "pdf",
+            use_filename: true,
+            unique_filename: true,
+            access_mode: "public",
+          }),
         },
         (err, result) => {
           if (err) return reject(err);
           if (!result) return reject(new Error("Upload failed"));
-
           resolve(result);
         },
       );
