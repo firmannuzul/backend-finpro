@@ -61,7 +61,39 @@ export class JobService {
       from,
       to,
     } = query;
-    console.log("timeRange from frontend:", timeRange); // 👈 TARO DI SINI
+
+    /* 🛡️ Validations */
+    if (page < 1) throw new ApiError("Page must be greater than 0", 400);
+    if (take < 1 || take > 100)
+      throw new ApiError("Take must be between 1 and 100", 400);
+
+    const validSortBy = ["createdAt", "postedAt", "title", "views"];
+    if (sortBy && !validSortBy.includes(sortBy))
+      throw new ApiError(
+        `Invalid sortBy field. Allowed: ${validSortBy.join(", ")}`,
+        400,
+      );
+
+    const validSortOrder = ["asc", "desc"];
+    if (sortOrder && !validSortOrder.includes(sortOrder))
+      throw new ApiError("sortOrder must be 'asc' or 'desc'", 400);
+
+    const validTimeRange = ["all", "week", "month", "custom"];
+    if (timeRange && !validTimeRange.includes(timeRange))
+      throw new ApiError(
+        `Invalid timeRange. Allowed: ${validTimeRange.join(", ")}`,
+        400,
+      );
+
+    if (timeRange === "custom") {
+      if (!from || !to)
+        throw new ApiError(
+          "from and to are required when timeRange is 'custom'",
+          400,
+        );
+      if (new Date(from) > new Date(to))
+        throw new ApiError("from date must be before to date", 400);
+    }
 
     const whereClause: Prisma.JobPostingWhereInput = {};
 
@@ -152,7 +184,10 @@ export class JobService {
       // include: { company: true},
     });
 
+    if (!jobs.length) throw new ApiError("No jobs found", 404);
+
     const total = await this.prisma.jobPosting.count({ where: whereClause });
+
     return {
       data: jobs,
       meta: { page, take, total },
@@ -177,15 +212,25 @@ export class JobService {
     page: number = 1,
     take: number = 5,
   ) => {
+    if (!companyId) throw new ApiError("Company ID is required", 400);
+    if (page < 1) throw new ApiError("Page must be greater than 0", 400);
+    if (take < 1 || take > 100)
+      throw new ApiError("Take must be between 1 and 100", 400);
+
+    const company = await this.prisma.companyProfile.findUnique({
+      where: { id: companyId },
+    });
+    if (!company) throw new ApiError("Company not found", 404);
+
     const jobs = await this.prisma.jobPosting.findMany({
       where: {
         companyId,
-        isPublished: true, // 🔥 optional tapi bagus
+        isPublished: true,
       },
       take,
       skip: (page - 1) * take,
       orderBy: {
-        postedAt: "desc", // ✅ sesuai schema
+        postedAt: "desc",
       },
       include: {
         company: {
@@ -195,6 +240,8 @@ export class JobService {
         },
       },
     });
+
+    if (!jobs.length) throw new ApiError("No jobs found for this company", 404);
 
     const total = await this.prisma.jobPosting.count({
       where: {
@@ -220,6 +267,19 @@ export class JobService {
     page: number = 1,
     take: number = 10,
   ) => {
+    /* 🛡️ Validations */
+    if (lat === undefined || lng === undefined)
+      throw new ApiError("Latitude and longitude are required", 400);
+    if (lat < -90 || lat > 90)
+      throw new ApiError("Latitude must be between -90 and 90", 400);
+    if (lng < -180 || lng > 180)
+      throw new ApiError("Longitude must be between -180 and 180", 400);
+    if (radius < 1 || radius > 500)
+      throw new ApiError("Radius must be between 1 and 500 km", 400);
+    if (page < 1) throw new ApiError("Page must be greater than 0", 400);
+    if (take < 1 || take > 100)
+      throw new ApiError("Take must be between 1 and 100", 400);
+
     const jobs = await this.prisma.jobPosting.findMany({
       where: {
         latitude: { not: null },
@@ -254,9 +314,15 @@ export class JobService {
       .filter((job) => job.distance <= radius)
       .sort((a, b) => a.distance - b.distance);
 
+    if (!jobsWithDistance.length)
+      throw new ApiError("No jobs found within the specified radius", 404);
+
     const total = jobsWithDistance.length;
 
     const paginated = jobsWithDistance.slice((page - 1) * take, page * take);
+
+    if (!paginated.length)
+      throw new ApiError("Page exceeds total available data", 400);
 
     return {
       data: paginated,
