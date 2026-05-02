@@ -22,28 +22,15 @@ export class CloudinaryService {
     return new Promise((resolve, reject) => {
       const readableStream = this.bufferToStream(file.buffer);
 
-      // 👉 cek apakah pdf
       const isPdf = file.mimetype === "application/pdf";
-
-      // const uploadStream = cloudinary.uploader.upload_stream(
-      //   {
-      //     resource_type: isPdf ? "raw" : "image", // default Cloudinary = image
-      //   },
-      //   (err, result) => {
-      //     if (err) return reject(err);
-      //     if (!result) return reject(new Error("Upload failed"));
-
-      //     resolve(result);
-      //   },
-      // );
+      const originalName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
 
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: isPdf ? "raw" : "image",
           ...(isPdf && {
-            format: "pdf",
-            use_filename: true,
-            unique_filename: true,
+            folder: "pdfs",
+            public_id: originalName,
             access_mode: "public",
           }),
         },
